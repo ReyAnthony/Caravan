@@ -1,0 +1,17 @@
+{
+    "name": "Caravan.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "NaughtyAttributes.Core",
+        "NaughtyAttributes.Editor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
