@@ -1,5 +1,5 @@
 # Caravan
-Unity quick and dirty serialization, currently uses Json .NET as it's backend, I just wanted something without the complications of most serializations libs. Goal is to abstract the code enough to use any serialization backend (but i'm lazy eh, it will work for my games as-is) 
+Unity quick and dirty serialization. 
 
 - Saves Scriptable Objects and allow to restore them back
 - Uses mostly C# attributes + custom classes to inherit from (as Helpers)
@@ -11,15 +11,10 @@ Unity quick and dirty serialization, currently uses Json .NET as it's backend, I
 
 
 Dependencies :
-- JSON.Net
-- Naughty Attributes
-
-Setup :
-
-Due to limitations on Unity side, you'll need to add a scoped registry in order to be able to retrieve Naughty Attributes :
-- Name: package.openupm.com
-- Url: https://package.openupm.com
-- Scope: com.dbrizov.naughtyattributes
+- JSON.Net (Meaning the saves will be in JSON format)
+	- I just wanted something without the complications of most serializations libs. Goal is to abstract the code enough to use any serialization backend (but i'm lazy eh, it will work for my games as-is) 
+- [Naughty Attributes](https://github.com/dbrizov/NaughtyAttributes) (Used in some UIs, unless the project is using Odin Inspector)
+	- Embeds .dll of the tool in editor mode unless ODIN_INSPECTOR is defined in the project.
 
 Example usage : 
 ```

@@ -1,6 +1,11 @@
 ﻿using System;
-using NaughtyAttributes;
 using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#else
+using NaughtyAttributes;
+#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,7 +16,7 @@ namespace CaravanSerialization
 	[RequireSavedInInheritors]
 	public abstract class CaravanScriptableObject : ScriptableObject
 	{
-        [CaravanId, SerializeField, ReadOnly] private string _id;
+        [CaravanId, SerializeField , ReadOnly] private string _id;
 
         [SaveCallback]
 		protected abstract void SaveCallback(ISaver saver);
@@ -19,7 +24,6 @@ namespace CaravanSerialization
 		[LoadCallback]
 		protected abstract void LoadCallback(ILoader loader);
 
-//TODO use partial class ?
 #if UNITY_EDITOR
 		[Button]
 		private void GenerateUUID()

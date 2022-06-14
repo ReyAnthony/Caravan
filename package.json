@@ -1,31 +1,27 @@
-﻿{
+{
     "name": "com.anghr.caravan",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "displayName": "Caravan",
     "description": "Serialization Helpers for Unity",
     "category": "Tools",
     "unity": "2021.3",
-    "dependencies":
-    {
-        "com.unity.nuget.newtonsoft-json": "3.0.2",
-        "com.dbrizov.naughtyattributes": "2.1.4"
+    "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
     },
-    "samples":
-    [
+    "samples": [
         {
             "displayName": "Demo scene",
             "description": "Contains sample usage scene for Caravan",
             "path": "Samples~/Demo/"
         }
     ],
-    "keywords":
-    [
+    "keywords": [
         "Serialization"
     ],
-    "author":
-    {
+    "author": {
         "name": "Anthony Rey",
         "email": "me@anghr.com",
         "url": "https://github.com/ReyAnthony/Caravan"
-    }
+    },
+    "type": "library"
 }
