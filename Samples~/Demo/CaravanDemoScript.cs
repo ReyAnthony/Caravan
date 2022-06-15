@@ -60,14 +60,14 @@ public class GameManagerMigrationDefinition : AbstractMigrationDefinition
     protected override void InternalMigrate(ILoader loader, object obj)
     {
         var testStruct = loader.Load<TestStruct>("testStruct");
-        obj.GetType().GetField("testStructa", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(obj, testStruct.a);
-        obj.GetType().GetField("testStructb", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(obj, testStruct.b);
+        obj.SetInstanceFieldValue("testStructa", testStruct.a);
+        obj.SetInstanceFieldValue("testStructb", testStruct.b);
 
         var f = loader.Load<float>("f");
         var d = loader.Load<double>("d");
         var i = loader.Load<int>("_i");
 
-        obj.GetType().GetField("f", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(obj, (float) (f + d + i));
+         obj.SetInstanceFieldValue("f", (float) (f + d + i));
     }
 }
 #endif
