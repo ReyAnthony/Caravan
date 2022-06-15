@@ -14,7 +14,7 @@ Dependencies :
 - JSON.Net (Meaning the saves will be in JSON format)
 	- I just wanted something without the complications of most serializations libs. Goal is to abstract the code enough to use any serialization backend (but i'm lazy eh, it will work for my games as-is) 
 - [Naughty Attributes](https://github.com/dbrizov/NaughtyAttributes) (Used in some UIs, unless the project is using Odin Inspector)
-	- Embeds .dll of the tool in editor mode unless ODIN_INSPECTOR is defined in the project.
+	- Embeds .dll in editor mode unless ODIN_INSPECTOR is defined in the project's scripting define symbols.
 
 Example usage : 
 ```

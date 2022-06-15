@@ -10,9 +10,6 @@ public class GameManager : CaravanScriptableObject
 {
 	//basic types
 	[SaveThat, SerializeField] private string _s;
-	[SaveThat, SerializeField] private float f;
-	[SaveThat, SerializeField] private double d;
-	[SaveThat, SerializeField] private int _i = 1;
 	[SaveThat, SerializeField] private bool _b = false;
 	[SaveThat, SerializeField] private char _c = 'd';
 
@@ -34,17 +31,30 @@ public class GameManager : CaravanScriptableObject
 	[SaveThat, SerializeField] private Vector3 _vec3 = Vector3.back;
 	[SaveThat, SerializeField] private Quaternion q = Quaternion.identity;
 
-	//Custom type
-	[SaveThat, SerializeField] private TestStruct testStruct;
-
-	//Should be handleded automatically since we have defined TestStruct
-	[SaveThat, SerializeField] private List<TestStruct> testStructsList;
-
     //Nested
-
     [SaveThat, SerializeField] private NeedNested _needNested = new NeedNested();
 
-    protected override void SaveCallback(ISaver saver)
+#if CARAVAN_DEMO_SAVE_V2
+	//v2 replaces it with a composite field aggregating f d and _i
+	[SaveThat, SerializeField] private float f;
+
+	//TestStruct Flattened
+	[SaveThat, SerializeField] private int testStructa;
+	[SaveThat, SerializeField] private string testStructb;
+#else
+	[SaveThat, SerializeField] private float f;
+	[SaveThat, SerializeField] private double d;
+	[SaveThat, SerializeField] private int _i = 1;
+
+	//Custom type
+	//Removed in V2 and flattened
+	[SaveThat, SerializeField] private TestStruct testStruct;
+
+	//Not reused in V2
+	[SaveThat, SerializeField] private List<TestStruct> testStructsList;
+#endif
+
+	protected override void SaveCallback(ISaver saver)
     {
 		saver.Save<Vector3>(Vector3.back, "_ss");
 		saver.Save(new List<Vector3> { Vector3.down, Vector3.up }, "_allPlayerPositions");
@@ -104,6 +114,9 @@ public class NeedNested2
 }
 
 [Serializable]
+#if CARAVAN_DEMO_SAVE_V2
+[Obsolete]
+#endif
 public struct TestStruct
 {
 	public int a;
@@ -115,6 +128,7 @@ public class UserTypesMapper : IUserMapper
 {
 	public ITypeMapper FindUserTypeMapper(Type t, bool isAList)
 	{
+
 		dynamic mapper = null;
 
 		if (t == typeof(TestStruct)) mapper = new AsIsMapper<TestStruct>();
@@ -123,6 +137,7 @@ public class UserTypesMapper : IUserMapper
 			mapper = MapperHelpers.HandleLists(t, mapper);
 
 		if (mapper != null) return NonGenericTypeMapper.CreateFrom(mapper);
+
 		return null;
 	}
 }

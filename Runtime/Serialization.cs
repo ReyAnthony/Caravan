@@ -6,13 +6,15 @@ namespace CaravanSerialization
     [Serializable]
     internal class CaravanFile
     {
+        public int Version;
         public string FileName;
         public List<CaravanObject> CaravanObjects;
 
-        public CaravanFile(string fileName)
+        public CaravanFile(string fileName, int version)
         {
             FileName = fileName;
             CaravanObjects = new List<CaravanObject>();
+            Version = version;
         }
 
         public void Add(CaravanObject item)

@@ -24,6 +24,7 @@ namespace CaravanSerialization
         public void SaveAll();
         public void LoadAll();
         public void GenerateAllMissingInstanceID();
+        public void RegisterMigrationHandler(IMigrationHandler migrationHandler);
     }
 
     //TODO Reload if domain reload is disabled
@@ -120,7 +121,10 @@ namespace CaravanSerialization
 
         //Actual class
         private IMapperFinder _mapperFinder;
+        private SortedList<int, IMigrationHandler> _migrationHandlers;
+
         public IMapperFinder MapperFinder => _mapperFinder;
+        public SortedList<int, IMigrationHandler> MigrationHandlers => _migrationHandlers;
 
         public event Action OnAllSaved;
         public event Action OnAllLoaded;
@@ -128,6 +132,12 @@ namespace CaravanSerialization
         public Caravan()
         {
             _mapperFinder = new TypeMapperFinder();
+            _migrationHandlers = new();
+        }
+
+        public void RegisterMigrationHandler(IMigrationHandler migrationHandler)
+        {
+            _migrationHandlers.Add(migrationHandler.Version, migrationHandler);
         }
 
         public void SaveAll()
@@ -138,7 +148,9 @@ namespace CaravanSerialization
             foreach (var fileAndMetadata in metadataGroupedByFile)
             {
                 var fileName = fileAndMetadata.Key;
-                var fileToSave = new CaravanFile(fileName);
+
+                //TODO manage versions
+                var fileToSave = new CaravanFile(fileName, GetLatestVersionForSave());
               
                 foreach (var data in fileAndMetadata.Value)
                 {
@@ -276,10 +288,23 @@ namespace CaravanSerialization
                     foreach (var metadata in kvp.Value)
                     {
                         FindIdAndField(metadata, out var id, out var field);
+
                         var currentCaravanObj = caravanFile.CaravanObjects.Find(co => co.Id == (string)field.GetValue(metadata.Object));
+                        var handlers = _migrationHandlers.Values
+                                                .Where(h => h.Version > caravanFile.Version)
+                                                .Where(h => h.FindDefinitionForType(metadata.Type) != null)
+                                                .ToList();
+
                         if (currentCaravanObj != null) //should not be unless the save is no more consistent
                         {
                             RecursiveTraversal(kvp.Key, metadata, currentCaravanObj);
+                        }
+
+                        //Handle migrations if needed
+                        foreach(var handler in handlers)
+                        {
+                            handler.FindDefinitionForType(metadata.Object.GetType())
+                                .Migrate(new Loader(currentCaravanObj.Fields, _mapperFinder), metadata.Object);
                         }
                     }
                 }
@@ -333,6 +358,11 @@ namespace CaravanSerialization
         private string BuildSavePath(string filename)
         {
             return Application.persistentDataPath + Path.DirectorySeparatorChar + filename + ".json";
+        }
+
+        private int GetLatestVersionForSave()
+        {
+            return _migrationHandlers.Values.LastOrDefault()?.Version ?? 1;
         }
 
         private List<(FieldInfo Field, SaveThatAttribute Attr)> GetAllSaveThatFields(ObjectMetadata data)

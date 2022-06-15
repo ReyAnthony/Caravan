@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0586528ec6fb4fc78e5fcd5760ffab9, type: 3}
   m_Name: GameManager
   m_EditorClassIdentifier: 
-  _id: 
+  _id: 4c1802b6-b1ad-40bd-8190-d82a33b77eca
   _s: 
   f: 0
   d: 0
