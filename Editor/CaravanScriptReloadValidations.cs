@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
+using CaravanSerialization.Attributes;
+using CaravanSerialization.Substitutes;
 using UnityEditor.Callbacks;
 using UnityEngine;
 
-namespace CaravanSerialization
+namespace CaravanSerialization.Editor
 {
-    internal class CaravanScriptReloadValidations
+    internal static class CaravanScriptReloadValidations
     {
-        //TODO do the same to check IDs
-        //It's better to test everytime than only when we save or load.
-
+        [DidReloadScripts]
+        public static void CheckDuppedIds()
+        {
+            bool CheckAllIds(string _) => true;
+            CaravanHelper.Instance.CheckDuplicatedIDs(CheckAllIds);
+        }
+        
         [DidReloadScripts]
         public static void CheckThatRequireSavedInInheritorsIsEnforced()
         {
@@ -39,7 +46,38 @@ namespace CaravanSerialization
                         $"because {typeWithRequired.Name} is [{typeof(RequireSavedInInheritorsAttribute).Name}]");
                 }
             }
-         
+        }
+
+        [DidReloadScripts]
+        public static void CheckTypeSubstitutesAreValid()
+        {
+            var substitutes = AppDomain
+                .CurrentDomain
+                .GetAssemblies()
+                .AsEnumerable()
+                .Where(PublicCaravanExtensions.IsAssemblyNotFromUnity)
+                .SelectMany(PublicCaravanExtensions.GetTypesThatAreDecoratedBy<SerializationSubstituteForAttribute>)
+                .Select(t => (Type: t, Attribute: t.GetCustomAttribute(typeof(SerializationSubstituteForAttribute)) as SerializationSubstituteForAttribute))
+                .ToList();
+
+            foreach (var typeAndAttr in substitutes)
+            {
+                var hasOpTo = typeAndAttr.Type.DeclaredMethods
+                   .Where(m => m.Name == "op_Explicit")
+                   .Where(m => m.ReturnType == typeAndAttr.Attribute.Type)
+                   .Count(m => m.GetParameters().Count(p => p.ParameterType == typeAndAttr.Type) == 1) == 1;
+
+               var hasOpFrom = typeAndAttr.Type.DeclaredMethods
+                   .Where(m => m.Name == "op_Explicit")
+                   .Where(m => m.ReturnType == typeAndAttr.Type)
+                   .Count(m => m.GetParameters().Count(p => p.ParameterType == typeAndAttr.Attribute.Type) == 1) == 1;
+
+               if (!(hasOpTo && hasOpFrom))
+               {
+                  Debug.LogError($"{typeAndAttr.Attribute.Type.Name} substitute has issues with its explicit operators. " +
+                                 $"Save/Load will fail.");
+               }
+            }
         }
     }
 }

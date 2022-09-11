@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90d55b5d67f840a28190e09e0333e696, type: 3}
+  m_Name: BasicTypeCheck
+  m_EditorClassIdentifier: 
+  _id: 
+  _string: str
+  _bool: 0
+  _char: 99
+  _int: 10
+  _long: 5
+  _byte: 0
+  _bb: 0
+  _listString:
+  - a
+  - a
+  - a
+  _listInt: 010000000200000003000000
+  _vector3: {x: 0, y: 0, z: -1}
+  _quaternion: {x: 0, y: 0, z: 0, w: 1}
+  _nestedTest2:
+  - aaa: 0

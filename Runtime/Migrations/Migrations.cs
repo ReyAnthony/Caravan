@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using CaravanSerialization.ObjectModel;
 
-namespace CaravanSerialization
+namespace CaravanSerialization.Migrations
 {
     public interface IMigrationHandler
     {

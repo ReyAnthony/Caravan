@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CaravanSerialization
+namespace CaravanSerialization.ObjectModel
 {
     [Serializable]
     internal class CaravanFile
@@ -31,8 +31,8 @@ namespace CaravanSerialization
 
         public CaravanObjectData(string memberName, object data)
         {
-            this.MemberName = memberName;
-            this.Data = data;
+            MemberName = memberName;
+            Data = data;
         }
     }
 
@@ -43,21 +43,21 @@ namespace CaravanSerialization
         public List<CaravanObjectData> Fields;
         public List<CaravanObject> Nested;
 
-        public CaravanObject(String id, List<CaravanObjectData> data, List<CaravanObject> nested)
+        public CaravanObject(String id, List<CaravanObjectData> fields, List<CaravanObject> nested)
         {
             Id = id;
-            Fields = data;
+            Fields = fields;
             Nested = nested;
+
+            if (Fields == null || Fields.Count == 0)
+            {
+                Fields = null;
+            }
+            
+            if (Nested == null || Nested.Count == 0)
+            {
+                Nested = null;
+            }
         }
-    }
-
-    public interface ISaver
-    {
-        public void Save<T>(T value, string key);
-    }
-
-    public interface ILoader
-    {
-        public T Load<T>(string key);
     }
 }

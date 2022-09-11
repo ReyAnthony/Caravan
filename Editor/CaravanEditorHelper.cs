@@ -1,20 +1,26 @@
 ﻿using System;
 using UnityEditor;
 
-namespace CaravanSerialization
+namespace CaravanSerialization.Editor
 {
 	public static class CaravanEditorHelper
 	{
-        [MenuItem("Game/Save all")]
+        [MenuItem("Game/Caravan/Save all")]
         public static void Save()
         {
             CaravanHelper.Instance.SaveAll();
         }
 
-        [MenuItem("Game/Load all")]
+        [MenuItem("Game/Caravan/Load all")]
         public static void Load()
         {
             CaravanHelper.Instance.LoadAll();
+        }
+
+        [MenuItem("Game/Caravan/Generate All missing IDs")]
+        public static void GenerateAllMissingIDs()
+        {
+            CaravanHelper.Instance.GenerateAllMissingInstanceID();
         }
     }
 }

@@ -8,7 +8,7 @@ Unity quick and dirty serialization.
 - You can use Callback to define custom saving/loading strategies for certains variable (eg : dumping/loading gameobjects) 
 - Events to know when the save/load finished
 - Should play along pretty well with [DItan, A lite DI framework for Unity](https://github.com/ReyAnthony/DItan).
-
+- Base64 encoding of the save file at runtime (For now, will add encryption later, but that should deter 99% of wanabee hackers) 
 
 Dependencies :
 - JSON.Net (Meaning the saves will be in JSON format)
@@ -41,8 +41,7 @@ public class GameManager : CaravanScriptableObject
 	}
 }
 
-[Nested]
-[Serializable]
+[Nested, Serializable]
 public class NeedNested
 {
 	[SaveThat, SerializeField] private int anInt = 0;

@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace CaravanSerialization
+namespace CaravanSerialization.Attributes
 {
     public abstract class ValidableAttribute : Attribute
     {
@@ -17,9 +17,7 @@ namespace CaravanSerialization
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class SavedAttribute : ValidableAttribute
     {
-        public string File { get; private set; }
-        public bool Instantiate { get; }
-
+        public string File { get; }
         public override bool Validate()
         {
             if (string.IsNullOrEmpty(File))
@@ -34,11 +32,6 @@ namespace CaravanSerialization
         {
             File = file;
         }
-
-        public SavedAttribute(string file, bool instantiate) : this(file)
-        {
-            Instantiate = instantiate;
-        }
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
@@ -50,7 +43,7 @@ namespace CaravanSerialization
     [AttributeUsage(AttributeTargets.Field)]
     public class SaveThatAttribute : Attribute
     {
-
+        public bool IgnoreTypeSubstitution = false;
     }
 
     //Must be SerializedField and have a unique value

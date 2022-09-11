@@ -1,4 +1,6 @@
 ﻿using System;
+using CaravanSerialization.Attributes;
+using CaravanSerialization.ObjectModel;
 using UnityEngine;
 
 #if ODIN_INSPECTOR
@@ -11,7 +13,7 @@ using NaughtyAttributes;
 using UnityEditor;
 #endif
 
-namespace CaravanSerialization
+namespace CaravanSerialization.ObjectModel
 {
 	[RequireSavedInInheritors]
 	public abstract class CaravanScriptableObject : ScriptableObject
@@ -26,7 +28,7 @@ namespace CaravanSerialization
 
 #if UNITY_EDITOR
 		[Button]
-		private void GenerateUUID()
+		private void GenerateUuid()
 		{
 			if(!string.IsNullOrEmpty(_id))
             {
