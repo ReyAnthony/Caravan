@@ -12,13 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90d55b5d67f840a28190e09e0333e696, type: 3}
   m_Name: BasicTypeCheck
   m_EditorClassIdentifier: 
-  _id: 
+  _id: 07b89722-04d1-450e-9f06-557b566f21cc
   _string: str
   _bool: 0
   _char: 99
   _int: 10
-  _long: 5
-  _byte: 0
   _bb: 0
   _listString:
   - a
@@ -27,5 +25,9 @@ MonoBehaviour:
   _listInt: 010000000200000003000000
   _vector3: {x: 0, y: 0, z: -1}
   _quaternion: {x: 0, y: 0, z: 0, w: 1}
+  _nestedTest:
+    _int: 0
+    _nestedTest2:
+      aaa: 0
   _nestedTest2:
   - aaa: 0

@@ -12,6 +12,11 @@ namespace CaravanSerialization.Serialization
     {
         public void Serialize(string filePath, CaravanFile fileToSave)
         {
+            if (!filePath.EndsWith(GetExtension()))
+            {
+                throw new UnityException("Wrong extension file !");
+            }
+            
             var options = new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore
@@ -25,6 +30,11 @@ namespace CaravanSerialization.Serialization
 
         public CaravanFile Deserialize(string fileToLoad)
         {
+            if (!fileToLoad.EndsWith(GetExtension()))
+            {
+                throw new UnityException("Wrong extension file !");
+            }
+            
             try
             {
                 var json = File.ReadAllText(fileToLoad, Encoding.Unicode);
@@ -39,6 +49,8 @@ namespace CaravanSerialization.Serialization
                 return null;
             }
         }
+
+        public string GetExtension() => "json";
 
         public Encoding DefaultEncoding => Encoding.Unicode;
         public CryptOperation OnEncryptHandler { get; set; }

@@ -16,5 +16,6 @@ namespace CaravanSerialization.Serialization
     {
         public void Serialize(string filePath, CaravanFile fileToSave);
         public CaravanFile Deserialize(string fileToLoad);
+        string GetExtension();
     }
 }

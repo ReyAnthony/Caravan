@@ -22,6 +22,13 @@ namespace CaravanSerialization.Editor
         {
             CaravanHelper.Instance.GenerateAllMissingInstanceID();
         }
+
+        [MenuItem("Game/Caravan/Clear all savefiles")]
+        public static void ClearAllSaveFiles()
+        {
+            //Delete all json file in save dir 
+            CaravanHelper.Instance.CleanAllSaves();
+        }
     }
 }
 

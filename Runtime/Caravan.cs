@@ -8,6 +8,7 @@ using CaravanSerialization.Serialization;
 using CaravanSerialization.Substitutes;
 using CaravanSerialization.Migrations;
 using CaravanSerialization.ObjectModel;
+using Sirenix.Utilities.Editor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -28,6 +29,7 @@ namespace CaravanSerialization
         
         //TODO
         //public void RegisterMigrationHandler(IMigrationHandler migrationHandler);
+        void CleanAllSaves();
     }
 
     internal class Caravan : ICaravan
@@ -202,7 +204,27 @@ namespace CaravanSerialization
                 }
             }
         }
-        
+
+        public void CleanAllSaves()
+        {
+            var files = Directory
+                .EnumerateFiles(GetSaveFolder())
+                .Where(f => f.EndsWith(_serializer.GetExtension()))
+                .ToList();
+            
+            if (files.Count == 0)
+            {
+                Debug.Log("No save files to delete.");
+                return;
+            }
+            
+            foreach (var enumerateFile in files)
+            {
+                File.Delete(enumerateFile);
+                Debug.Log($"Deleted {enumerateFile}");
+            }
+        }
+
         //Internal
         private List<IMigrationHandler> FindMigrationHandlers(CaravanFile caravanFile, ScriptableObject obj)
         {
@@ -211,12 +233,11 @@ namespace CaravanSerialization
                 .Where(h => h.FindDefinitionForType(obj.GetType()) != null)
                 .ToList();
             return handlers;
-        } 
-        
-        private static string BuildSavePath(string filename)
-        {
-            return Application.persistentDataPath + Path.DirectorySeparatorChar + filename + ".json";
         }
+
+        private static string GetSaveFolder() => Application.persistentDataPath + Path.DirectorySeparatorChar;
+        
+        private string BuildSavePath(string filename) => $"{GetSaveFolder()}{filename}.{_serializer.GetExtension()}";
 
         private int GetLatestVersionForSave() => _migrationHandlers.Values.LastOrDefault()?.Version ?? 1;
 

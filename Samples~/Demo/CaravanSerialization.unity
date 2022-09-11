@@ -465,7 +465,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _save: {fileID: 860230815}
   _reload: {fileID: 497175970}
-  _saved: {fileID: 11400000, guid: 12423faffa6064140b8f9ea562b86ff9, type: 2}
+  _saved: {fileID: 11400000, guid: aafdc38b22b8e4010b90fa29b089b808, type: 2}
 --- !u!1 &714461893
 GameObject:
   m_ObjectHideFlags: 0
@@ -707,7 +707,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
 --- !u!114 &1052369277
 MonoBehaviour:
   m_ObjectHideFlags: 0

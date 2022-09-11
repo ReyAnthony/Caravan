@@ -14,14 +14,8 @@ namespace CaravanSerialization.Serialization
             _serializer.OnEncryptHandler = crypt => Convert.ToBase64String(_serializer.DefaultEncoding.GetBytes(crypt));
         }
 
-        public void Serialize(string filePath, CaravanFile fileToSave)
-        {
-            _serializer.Serialize(filePath, fileToSave);
-        }
-
-        public CaravanFile Deserialize(string fileToLoad)
-        {
-            return _serializer.Deserialize(fileToLoad);
-        }
+        public void Serialize(string filePath, CaravanFile fileToSave) => _serializer.Serialize(filePath, fileToSave);
+        public CaravanFile Deserialize(string fileToLoad) => _serializer.Deserialize(fileToLoad);
+        public string GetExtension() => _serializer.GetExtension();
     }
 }
