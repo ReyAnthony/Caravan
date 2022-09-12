@@ -8,7 +8,6 @@ using CaravanSerialization.Serialization;
 using CaravanSerialization.Substitutes;
 using CaravanSerialization.Migrations;
 using CaravanSerialization.ObjectModel;
-using Sirenix.Utilities.Editor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
