@@ -5,25 +5,25 @@ namespace CaravanSerialization.Editor
 {
 	public static class CaravanEditorHelper
 	{
-        [MenuItem("Game/Caravan/Save all")]
+        [MenuItem("Tools/Caravan/Save all")]
         public static void Save()
         {
             CaravanHelper.Instance.SaveAll();
         }
 
-        [MenuItem("Game/Caravan/Load all")]
+        [MenuItem("Tools/Caravan/Load all")]
         public static void Load()
         {
             CaravanHelper.Instance.LoadAll();
         }
 
-        [MenuItem("Game/Caravan/Generate All missing IDs")]
+        [MenuItem("Tools/Caravan/Generate All missing IDs")]
         public static void GenerateAllMissingIDs()
         {
             CaravanHelper.Instance.GenerateAllMissingInstanceID();
         }
 
-        [MenuItem("Game/Caravan/Clear all savefiles")]
+        [MenuItem("Tools/Caravan/Clear all savefiles")]
         public static void ClearAllSaveFiles()
         {
             //Delete all json file in save dir 
