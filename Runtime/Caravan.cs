@@ -21,13 +21,15 @@ namespace CaravanSerialization
     {
         public event Action OnAllSaved;
         public event Action OnAllLoaded;
+        public event Action<ScriptableObject> BeforeSave;
+
         public void SaveAll();
         public void LoadAll();
         public void GenerateAllMissingInstanceID();
         public void CheckDuplicatedIDs(Func<string, bool> filteringStrategy);
         
-        //TODO
         //public void RegisterMigrationHandler(IMigrationHandler migrationHandler);
+
         void CleanAllSaves();
     }
 
@@ -37,16 +39,20 @@ namespace CaravanSerialization
         private readonly ISerializer _serializer;
         private readonly SortedList<int, IMigrationHandler> _migrationHandlers;
         private readonly ICaravanObjectTransformer _caravanObjectTransformer;
-
+        private Dictionary<Type, List<Action<ScriptableObject>>> _beforeSaveEvents;
+        
         public SortedList<int, IMigrationHandler> MigrationHandlers => _migrationHandlers;
-
         public event Action OnAllSaved;
         public event Action OnAllLoaded;
+        public event Action<ScriptableObject> BeforeSave;
 
         public Caravan()
         {
             _migrationHandlers = new SortedList<int, IMigrationHandler>();
             _substitutesFinder = new SubstitutesFinder();
+            _beforeSaveEvents = new Dictionary<Type, List<Action<ScriptableObject>>>();
+            
+            //TODO pass the serializer via editor settings ui + add options instead of define ?
             #if UNITY_EDITOR && !CARAVAN_USE_BASE64_ENCODING
             _serializer = new JsonSerializer();
             #else
@@ -108,6 +114,7 @@ namespace CaravanSerialization
             {
                 foreach (var so in scriptables)
                 {
+                    BeforeSave?.Invoke(so);
                     so.FindIdAttributeAndField(out var idAttribute, out var idField);
                     CheckIdForCorrectness(so, idAttribute, idField);
 
@@ -201,6 +208,28 @@ namespace CaravanSerialization
                                             .ToArray();
 #endif
                 }
+            }
+        }
+        
+        public void RegisterToBeforeSaveEvent<T>(Action<ScriptableObject> action) where T : ScriptableObject
+        {
+            if (_beforeSaveEvents.ContainsKey(typeof(T)))
+            {
+                _beforeSaveEvents[typeof(T)].Add(action);
+            }
+            else
+            {
+                var l = new List<Action<ScriptableObject>>();
+                _beforeSaveEvents.Add(typeof(T), l);
+                l.Add(action);
+            }
+        }
+
+        public void UnregisterFromBeforeSaveEvent<T>(Action<ScriptableObject> action) where T : ScriptableObject
+        {
+            if (_beforeSaveEvents.ContainsKey(typeof(T)))
+            {
+                _beforeSaveEvents[typeof(T)].Remove(action);
             }
         }
 
