@@ -31,8 +31,8 @@ namespace CaravanSerialization.Substitutes
             Z = vector3.z;
         }
         
-        public static explicit operator Vector3(CaravanV3 v3) => new (v3.X, v3.Y, v3.Z);
-        public static explicit operator CaravanV3(Vector3 v3) => new (v3);
+        public static explicit operator Vector3(CaravanV3 v3) => new Vector3(v3.X, v3.Y, v3.Z);
+        public static explicit operator CaravanV3(Vector3 v3) => new CaravanV3(v3);
     }
     
     [SerializationSubstituteFor(typeof(Quaternion))]
@@ -50,7 +50,7 @@ namespace CaravanSerialization.Substitutes
         }
 
         public static explicit operator Quaternion(CaravanQuaternionEuler q) => Quaternion.Euler(q.X, q.Y, q.Z);
-        public static explicit operator CaravanQuaternionEuler(Quaternion q) => new (q);
+        public static explicit operator CaravanQuaternionEuler(Quaternion q) => new CaravanQuaternionEuler(q);
     }
 
     [SerializationSubstituteFor(typeof(int))]
@@ -62,7 +62,7 @@ namespace CaravanSerialization.Substitutes
             Val = i32;
         }
         
-        public static explicit operator CaravanI32(int i) => new (i);
+        public static explicit operator CaravanI32(int i) => new CaravanI32(i);
         public static explicit operator int(CaravanI32 ci) => ci.Val;
     }
 
@@ -75,7 +75,7 @@ namespace CaravanSerialization.Substitutes
             Val = f;
         }
         
-        public static explicit operator CaravanFloat(float f) => new (f);
+        public static explicit operator CaravanFloat(float f) => new CaravanFloat(f);
         public static explicit operator float(CaravanFloat cf) => cf.Val;
     }
     
@@ -88,7 +88,7 @@ namespace CaravanSerialization.Substitutes
             Val = b;
         }
         
-        public static explicit operator CaravanBool(bool b) => new (b);
+        public static explicit operator CaravanBool(bool b) => new CaravanBool(b);
         public static explicit operator bool(CaravanBool cb) => cb.Val;
     }
 
@@ -101,7 +101,7 @@ namespace CaravanSerialization.Substitutes
             Val = c;
         }
         
-        public static explicit operator CaravanChar(char c) => new (c);
+        public static explicit operator CaravanChar(char c) => new CaravanChar(c);
         public static explicit operator char(CaravanChar cc) => cc.Val;
     }
     
@@ -114,7 +114,7 @@ namespace CaravanSerialization.Substitutes
             Val = s;
         }
         
-        public static explicit operator CaravanString(string s) => new (s);
+        public static explicit operator CaravanString(string s) => new CaravanString(s);
         public static explicit operator string(CaravanString cs) => cs.Val;
     }
 }
