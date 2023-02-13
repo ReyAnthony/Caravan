@@ -171,8 +171,7 @@ namespace CaravanSerialization
         {
             var _ = Instance;
         }
-
-        //Use this only if you don't use DI
+        
         public static ICaravan Instance => _instance ??= new Caravan();
     }
 }

@@ -16,6 +16,6 @@ namespace CaravanSerialization.Serialization
 
         public void Serialize(string filePath, CaravanFile fileToSave) => _serializer.Serialize(filePath, fileToSave);
         public CaravanFile Deserialize(string fileToLoad) => _serializer.Deserialize(fileToLoad);
-        public string GetExtension() => _serializer.GetExtension();
+        public string GetExtension() => "caravan";
     }
 }

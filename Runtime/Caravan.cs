@@ -25,6 +25,9 @@ namespace CaravanSerialization
 
         public void SaveAll();
         public void LoadAll();
+        bool HasSave();
+        
+        
         public void GenerateAllMissingInstanceID();
         public void CheckDuplicatedIDs(Func<string, bool> filteringStrategy);
         
@@ -168,7 +171,17 @@ namespace CaravanSerialization
                 }
             }
         }
-        
+
+        public bool HasSave()
+        {
+            var files = Directory
+                .EnumerateFiles(GetSaveFolder())
+                .Where(f => f.EndsWith(_serializer.GetExtension()))
+                .ToList();
+
+            return files.Count != 0;
+        }
+
         public void GenerateAllMissingInstanceID()
         {
             foreach (var so in CaravanHelpers.GetAllScriptablesTaggedSaved())
