@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.Serialization;
 
 namespace CaravanSerialization.ObjectModel
 {
@@ -25,6 +26,11 @@ namespace CaravanSerialization.ObjectModel
             if (typeof(IList).IsAssignableFrom(typeof(T)))
             {
                 fakeContainer.RESERVED_BY_CARAVAN = Activator.CreateInstance<T>();
+            }
+            else
+            {
+                //CARAVAN needs a created object to inject data into
+                fakeContainer.RESERVED_BY_CARAVAN = (T) FormatterServices.GetUninitializedObject(typeof(T));
             }
             
             //TODO, this will do for now, but it sucks
