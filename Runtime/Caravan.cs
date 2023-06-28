@@ -174,12 +174,15 @@ namespace CaravanSerialization
 
         public bool HasSave()
         {
+            //TODO, I should also have a way to ensure all needed [Saved] are in the folder
             var files = Directory
                 .EnumerateFiles(GetSaveFolder())
                 .Where(f => f.EndsWith(_serializer.GetExtension()))
-                .ToList();
+                .Count();
 
-            return files.Count != 0;
+            //Checks that we have the same number of files than saveable attributes
+            return GetValidScriptablesWithSavedAttributeGroupedByFile().Count != 0 && 
+                   files == GetValidScriptablesWithSavedAttributeGroupedByFile().Count;
         }
 
         public void GenerateAllMissingInstanceID()
