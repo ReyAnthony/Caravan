@@ -41,7 +41,8 @@ namespace CaravanSerialization
                    && !assembly.FullName.Contains("ReportGeneratorMerged")
                    && !assembly.FullName.Contains("PlayerBuildProgramLibrary.Data")
                    && !assembly.FullName.Contains("ExCSS.Unity")
-                   && !assembly.FullName.Contains("unityplastic");
+                   && !assembly.FullName.Contains("unityplastic")
+                   && !assembly.FullName.Contains("Cinemachine");
         }
     }
     

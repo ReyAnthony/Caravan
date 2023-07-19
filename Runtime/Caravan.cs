@@ -42,6 +42,8 @@ namespace CaravanSerialization
         private readonly ISerializer _serializer;
         private readonly SortedList<int, IMigrationHandler> _migrationHandlers;
         private readonly ICaravanObjectTransformer _caravanObjectTransformer;
+        private readonly int _saveCountCached = 0;
+        
         private Dictionary<Type, List<Action<ScriptableObject>>> _beforeSaveEvents;
         
         public SortedList<int, IMigrationHandler> MigrationHandlers => _migrationHandlers;
@@ -62,6 +64,9 @@ namespace CaravanSerialization
              _serializer = new Base64EncodedSerializer<JsonSerializer>(new JsonSerializer());
             #endif
             _caravanObjectTransformer = new CaravanObjectTransformer(_substitutesFinder);
+            
+            //This is extremely slow, but the number of scriptable will not change during runtime !
+            _saveCountCached = GetValidScriptablesWithSavedAttributeGroupedByFile().Count();
         }
         
         public void RegisterMigrationHandler(IMigrationHandler migrationHandler)
@@ -171,7 +176,7 @@ namespace CaravanSerialization
                 }
             }
         }
-
+        
         public bool HasSave()
         {
             //TODO, I should also have a way to ensure all needed [Saved] are in the folder
@@ -179,10 +184,9 @@ namespace CaravanSerialization
                 .EnumerateFiles(GetSaveFolder())
                 .Where(f => f.EndsWith(_serializer.GetExtension()))
                 .Count();
-
+            
             //Checks that we have the same number of files than saveable attributes
-            return GetValidScriptablesWithSavedAttributeGroupedByFile().Count != 0 && 
-                   files == GetValidScriptablesWithSavedAttributeGroupedByFile().Count;
+            return _saveCountCached != 0 && files == _saveCountCached;
         }
 
         public void GenerateAllMissingInstanceID()
@@ -284,7 +288,7 @@ namespace CaravanSerialization
         private string BuildSavePath(string filename) => $"{GetSaveFolder()}{filename}.{_serializer.GetExtension()}";
 
         private int GetLatestVersionForSave() => _migrationHandlers.Values.LastOrDefault()?.Version ?? 1;
-
+        
         private Dictionary<string, List<ScriptableObject>> GetValidScriptablesWithSavedAttributeGroupedByFile()
         {
             var gameObjects = Resources.FindObjectsOfTypeAll<ScriptableObject>();
