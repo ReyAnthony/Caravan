@@ -17,6 +17,7 @@ namespace CaravanSerialization.Attributes
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class SavedAttribute : ValidableAttribute
     {
+        public bool RequiresExplicitAction { get; }
         public string File { get; }
         public override bool Validate()
         {
@@ -28,8 +29,9 @@ namespace CaravanSerialization.Attributes
             return true;
         }
 
-        public SavedAttribute(string file)
+        public SavedAttribute(string file, bool requiresExplicitAction = false)
         {
+            RequiresExplicitAction = requiresExplicitAction;
             File = file;
         }
     }

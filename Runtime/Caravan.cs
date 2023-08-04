@@ -21,11 +21,16 @@ namespace CaravanSerialization
     {
         public event Action OnAllSaved;
         public event Action OnAllLoaded;
-        public event Action<ScriptableObject> BeforeSave;
+        public event Action<ScriptableObject> BeforeSaveAll;
 
         public void SaveAll();
         public void LoadAll();
         bool HasSave();
+        
+        //For files that are to be loaded manually
+        public void SaveExplicit(string file);
+        public void LoadExplicit(string file);
+        bool HasSave(string file);
         
         
         public void GenerateAllMissingInstanceID();
@@ -49,7 +54,7 @@ namespace CaravanSerialization
         public SortedList<int, IMigrationHandler> MigrationHandlers => _migrationHandlers;
         public event Action OnAllSaved;
         public event Action OnAllLoaded;
-        public event Action<ScriptableObject> BeforeSave;
+        public event Action<ScriptableObject> BeforeSaveAll;
 
         public Caravan()
         {
@@ -66,7 +71,20 @@ namespace CaravanSerialization
             _caravanObjectTransformer = new CaravanObjectTransformer(_substitutesFinder);
             
             //This is extremely slow, but the number of scriptable will not change during runtime !
-            _saveCountCached = GetValidScriptablesWithSavedAttributeGroupedByFile().Count();
+            //The explicits are not counted, they are in their own folder + they might not exist.
+            _saveCountCached = GetValidScriptablesWithSavedAttributeGroupedByFile(false).Count();
+
+            var saveFolder = GetSaveFolder();
+            if (!Directory.Exists(saveFolder))
+            {
+                Directory.CreateDirectory(saveFolder);
+            }
+            
+            var explicitsSaveFolder = GetExplicitsSaveFolder();
+            if (!Directory.Exists(explicitsSaveFolder))
+            {
+                Directory.CreateDirectory(explicitsSaveFolder);
+            }
         }
         
         public void RegisterMigrationHandler(IMigrationHandler migrationHandler)
@@ -76,117 +94,50 @@ namespace CaravanSerialization
 
         public void SaveAll()
         {
-            Dictionary<string, List<ScriptableObject>> savedByFile = 
-                GetValidScriptablesWithSavedAttributeGroupedByFile();
-            
-            foreach (var (fileName, saveds) in 
-                     savedByFile.Select(x => (x.Key, x.Value)))
-            {
-                var caravanFile = new CaravanFile(fileName, GetLatestVersionForSave());
-                
-                PopulateCaravanFile(saveds, caravanFile);
-                _serializer.Serialize(BuildSavePath(fileName), caravanFile);
-            }
-
-            OnAllSaved?.Invoke();
-            
-            void CheckIdForCorrectness(object scriptableObject, CaravanIdAttribute id, FieldInfo field)
-            {
-                if (id == null)
-                {
-                    throw new UnityException("An object tagged Saved, must have a CaravanId defined.");
-                }
-                else if (field.GetCustomAttributes<CaravanIdAttribute>().Count() != 1)
-                {
-                    throw new UnityException("Only 1 CaravanId should be declared in the file");
-                }
-                else if (field.GetValue(scriptableObject)?.GetType() != typeof(string))
-                {
-                    throw new UnityException("A CaravanId must be a String");
-                }
-                else if (field.GetCustomAttribute<SerializeField>() == null)
-                {
-                    throw new UnityException("The CaravanId must also be SerializeField.");
-                }
-                else if (string.IsNullOrEmpty(field.GetValue<string>(scriptableObject)))
-                {
-                    throw new UnityException("A CaravanId must not be null or empty.");
-                }
-
-                //ID Should be good at this point
-                var idVal = field.GetValue<string>(scriptableObject);
-                CheckDuplicatedIDs((i) => i == idVal);
-            }
-            
-            void PopulateCaravanFile(List<ScriptableObject> scriptables, CaravanFile caravanFile)
-            {
-                foreach (var so in scriptables)
-                {
-                    BeforeSave?.Invoke(so);
-                    so.FindIdAttributeAndField(out var idAttribute, out var idField);
-                    CheckIdForCorrectness(so, idAttribute, idField);
-
-                    //TODO check no dupped Ids accross all objects
-                    var nestedCaravanObjects = _caravanObjectTransformer.CaravanObjectFromGameData(so);
-                    caravanFile.Add(nestedCaravanObjects.First());
-                }
-            }
+            SaveAllInternal();
         }
-       
+
+        public void SaveExplicit(string file)
+        {
+            SaveExplicitInternal(file);
+        }
+
         public void LoadAll()
         {
-           
-            Dictionary<string, List<ScriptableObject>> savedByFile = 
-                GetValidScriptablesWithSavedAttributeGroupedByFile();
-            
-            foreach (var (key, scriptables) 
-                     in savedByFile
-                         .Select(x => (x.Key, x.Value)))
-            {
-                var fileName = key;
-                string filePath = BuildSavePath(fileName);
-                var caravanFile = _serializer.Deserialize(filePath);
-                LoadFromCaravanFile(caravanFile, scriptables);
-            }
-
-            OnAllLoaded?.Invoke();
-
-            void LoadFromCaravanFile(CaravanFile caravanFile, List<ScriptableObject> scriptables)
-            {
-                if (caravanFile != null)
-                {
-                    foreach (var so in scriptables)
-                    {
-                        var idValue = so.GetId();
-                        var currentCaravanObj = caravanFile.CaravanObjects.Find(co => co.Id == idValue);
-                        var handlers = FindMigrationHandlers(caravanFile, so);
-
-                        if (currentCaravanObj != null) //should not be unless the save is not consistent anymore
-                        {
-                            _caravanObjectTransformer.CaravanObjectToGameData(so, currentCaravanObj);
-
-                            //Handle migrations if needed
-                            foreach (var handler in handlers)
-                            {
-                                handler.FindDefinitionForType(so.GetType())
-                                    .Migrate(new Loader(_caravanObjectTransformer, currentCaravanObj), so);
-                            }
-                        }
-                    }
-                }
-            }
+            LoadAllInternal();
+        }
+        
+        public void LoadExplicit(string file)
+        {
+            LoadExplicitInternal(file);
         }
         
         public bool HasSave()
         {
-            //TODO, I should also have a way to ensure all needed [Saved] are in the folder
+            //TODO, I should also have a way to ensure all needed [Saved] are in the folder, I just count...
+            var files = Directory
+                .EnumerateFiles(GetSaveFolder())
+                .Count(f => f.EndsWith(_serializer.GetExtension()));
+            
+            //Checks that we have the same number of files than saveable attributes
+            //We just check the non explicits
+            return _saveCountCached != 0 && files == _saveCountCached;
+        }
+
+        public bool HasSave(string file)
+        {
             var files = Directory
                 .EnumerateFiles(GetSaveFolder())
                 .Where(f => f.EndsWith(_serializer.GetExtension()))
-                .Count();
+                .ToList();
+
+            var explicits = Directory
+                .EnumerateFiles(GetExplicitsSaveFolder())
+                .Where(f => f.EndsWith(_serializer.GetExtension()))
+                .ToList();
             
-            //Checks that we have the same number of files than saveable attributes
-            return _saveCountCached != 0 && files == _saveCountCached;
+            files.AddRange(explicits);
+            return files.Count(f => Path.GetFileName(f).Split(".")[0] == file) != 0;
         }
 
         public void GenerateAllMissingInstanceID()
@@ -260,6 +211,13 @@ namespace CaravanSerialization
                 .Where(f => f.EndsWith(_serializer.GetExtension()))
                 .ToList();
             
+            var explicits = Directory
+                .EnumerateFiles(GetExplicitsSaveFolder())
+                .Where(f => f.EndsWith(_serializer.GetExtension()))
+                .ToList();
+            
+            files.AddRange(explicits);
+            
             if (files.Count == 0)
             {
                 Debug.Log("No save files to delete.");
@@ -274,6 +232,143 @@ namespace CaravanSerialization
         }
 
         //Internal
+        //Save
+        private void SaveAllInternal()
+        {
+            Dictionary<string, List<ScriptableObject>> savedByFile = 
+                GetValidScriptablesWithSavedAttributeGroupedByFile(requiresExplicitAction: false);
+            
+            foreach (var (fileName, saveds) in 
+                     savedByFile.Select(x => (x.Key, x.Value)))
+            {
+                var caravanFile = new CaravanFile(fileName, GetLatestVersionForSave());
+                PopulateCaravanFile(saveds, caravanFile);
+                _serializer.Serialize(BuildSavePath(fileName), caravanFile);
+            }
+
+            OnAllSaved?.Invoke();
+        }
+        
+        private void SaveExplicitInternal(string file)
+        {
+            Dictionary<string, List<ScriptableObject>> savedByFile = 
+                GetValidScriptablesWithSavedAttributeGroupedByFile(requiresExplicitAction: true);
+
+            var (fileName, saveds) = 
+                savedByFile
+                    .Select(x => (x.Key, x.Value))
+                    .FirstOrDefault(f => f.Key == file);
+            var caravanFile = new CaravanFile(fileName, GetLatestVersionForSave());
+            PopulateCaravanFile(saveds, caravanFile);
+            _serializer.Serialize(BuildSavePathExplicit(fileName), caravanFile);
+           
+            OnAllSaved?.Invoke();
+        }
+        
+        private void CheckIdForCorrectness(object scriptableObject, CaravanIdAttribute id, FieldInfo field)
+        {
+            if (id == null)
+            {
+                throw new UnityException("An object tagged Saved, must have a CaravanId defined.");
+            }
+            else if (field.GetCustomAttributes<CaravanIdAttribute>().Count() != 1)
+            {
+                throw new UnityException("Only 1 CaravanId should be declared in the file");
+            }
+            else if (field.GetValue(scriptableObject)?.GetType() != typeof(string))
+            {
+                throw new UnityException("A CaravanId must be a String");
+            }
+            else if (field.GetCustomAttribute<SerializeField>() == null)
+            {
+                throw new UnityException("The CaravanId must also be SerializeField.");
+            }
+            else if (string.IsNullOrEmpty(field.GetValue<string>(scriptableObject)))
+            {
+                throw new UnityException("A CaravanId must not be null or empty.");
+            }
+
+            //ID Should be good at this point
+            var idVal = field.GetValue<string>(scriptableObject);
+            CheckDuplicatedIDs((i) => i == idVal);
+        }
+            
+        private void PopulateCaravanFile(List<ScriptableObject> scriptables, CaravanFile caravanFile)
+        {
+            foreach (var so in scriptables)
+            {
+                BeforeSaveAll?.Invoke(so);
+                so.FindIdAttributeAndField(out var idAttribute, out var idField);
+                CheckIdForCorrectness(so, idAttribute, idField);
+
+                //TODO check no dupped Ids accross all objects
+                var nestedCaravanObjects = _caravanObjectTransformer.CaravanObjectFromGameData(so);
+                caravanFile.Add(nestedCaravanObjects.First());
+            }
+        }
+       
+        //Load
+        private void LoadAllInternal()
+        {
+            Dictionary<string, List<ScriptableObject>> savedByFile = 
+                GetValidScriptablesWithSavedAttributeGroupedByFile(requiresExplicitAction: false);
+            
+            foreach (var (key, scriptables) 
+                     in savedByFile
+                         .Select(x => (x.Key, x.Value)))
+            {
+                var fileName = key;
+                string filePath = BuildSavePath(fileName);
+                var caravanFile = _serializer.Deserialize(filePath);
+                LoadFromCaravanFile(caravanFile, scriptables);
+            }
+
+            OnAllLoaded?.Invoke();
+        }
+        
+        private void LoadExplicitInternal(string file)
+        {
+            Dictionary<string, List<ScriptableObject>> savedByFile = 
+                GetValidScriptablesWithSavedAttributeGroupedByFile(requiresExplicitAction: true);
+            
+            var (key, scriptables) 
+                    = savedByFile
+                         .Select(x => (x.Key, x.Value))
+                         .FirstOrDefault(f => f.Key == file);
+            
+            var fileName = key;
+            string filePath = BuildSavePathExplicit(fileName);
+            var caravanFile = _serializer.Deserialize(filePath);
+            LoadFromCaravanFile(caravanFile, scriptables);
+
+            OnAllLoaded?.Invoke();
+        }
+        
+        private  void LoadFromCaravanFile(CaravanFile caravanFile, List<ScriptableObject> scriptables)
+        {
+            if (caravanFile != null)
+            {
+                foreach (var so in scriptables)
+                {
+                    var idValue = so.GetId();
+                    var currentCaravanObj = caravanFile.CaravanObjects.Find(co => co.Id == idValue);
+                    var handlers = FindMigrationHandlers(caravanFile, so);
+
+                    if (currentCaravanObj != null) //should not be unless the save is not consistent anymore
+                    {
+                        _caravanObjectTransformer.CaravanObjectToGameData(so, currentCaravanObj);
+
+                        //Handle migrations if needed
+                        foreach (var handler in handlers)
+                        {
+                            handler.FindDefinitionForType(so.GetType())
+                                .Migrate(new Loader(_caravanObjectTransformer, currentCaravanObj), so);
+                        }
+                    }
+                }
+            }
+        }
+        
         private List<IMigrationHandler> FindMigrationHandlers(CaravanFile caravanFile, ScriptableObject obj)
         {
             var handlers = _migrationHandlers.Values
@@ -283,13 +378,15 @@ namespace CaravanSerialization
             return handlers;
         }
 
-        private static string GetSaveFolder() => Application.persistentDataPath + Path.DirectorySeparatorChar;
+        private static string GetSaveFolder() => Application.persistentDataPath + Path.DirectorySeparatorChar + "saves" + Path.DirectorySeparatorChar;
+        private static string GetExplicitsSaveFolder() => $"{GetSaveFolder()}explicits{Path.DirectorySeparatorChar}";
         
         private string BuildSavePath(string filename) => $"{GetSaveFolder()}{filename}.{_serializer.GetExtension()}";
+        private string BuildSavePathExplicit(string filename) => $"{GetExplicitsSaveFolder()}{filename}.{_serializer.GetExtension()}";
 
         private int GetLatestVersionForSave() => _migrationHandlers.Values.LastOrDefault()?.Version ?? 1;
         
-        private Dictionary<string, List<ScriptableObject>> GetValidScriptablesWithSavedAttributeGroupedByFile()
+        private Dictionary<string, List<ScriptableObject>> GetValidScriptablesWithSavedAttributeGroupedByFile(bool requiresExplicitAction)
         {
             var gameObjects = Resources.FindObjectsOfTypeAll<ScriptableObject>();
             var scriptablesGroupedByFile =
@@ -306,10 +403,36 @@ namespace CaravanSerialization
                                                           .FirstOrDefault(ca => ca is SavedAttribute) 
                                                     as SavedAttribute))
                                 .Where(e => e.Saved != null && e.Saved.Validate())
+                                .Where(e => e.Saved.RequiresExplicitAction == requiresExplicitAction)
                                 .GroupBy(t => t.Saved.File)
                                 .ToDictionary(grp => grp.Key,
                                     grp => grp.Select(tuple => tuple.Obj)
                                                                        .ToList());
+            return scriptablesGroupedByFile;
+        }
+        
+        //TODO Duplicated from GetValidScriptablesWithSavedAttributeGroupedByFile
+        private Dictionary<string, List<ScriptableObject>> GetValidScriptablesWithSavedAttributeGroupedByFileAll()
+        {
+            var gameObjects = Resources.FindObjectsOfTypeAll<ScriptableObject>();
+            var scriptablesGroupedByFile =
+                gameObjects
+                    .Select(so => so)
+#if UNITY_EDITOR
+                    //This will fail anyway in a build, but at least we'll already know while testing in editor.
+                    //Don't instantiate SOs at runtime, it's a wasp nest.  
+                    .Where(AssetDatabase.Contains)
+#endif
+                    .Select(so => (Obj: so,
+                        Saved : so.GetType()
+                                .GetCustomAttributes(false)
+                                .FirstOrDefault(ca => ca is SavedAttribute) 
+                            as SavedAttribute))
+                    .Where(e => e.Saved != null && e.Saved.Validate())
+                    .GroupBy(t => t.Saved.File)
+                    .ToDictionary(grp => grp.Key,
+                        grp => grp.Select(tuple => tuple.Obj)
+                            .ToList());
             return scriptablesGroupedByFile;
         }
     }

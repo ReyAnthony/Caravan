@@ -31,7 +31,9 @@ namespace CaravanSerialization.Serialization
                 json = OnDecryptHandler?.Invoke(json) ?? json;
                 
                 var options = new JsonSerializerSettings();
-                return JsonConvert.DeserializeObject<CaravanFile>(json, options);
+                var deserialized = JsonConvert.DeserializeObject<CaravanFile>(json, options);
+                Debug.Log("[Caravan] Loaded " + fileToLoad);
+                return deserialized;
             }
             catch (Exception ex)
             {

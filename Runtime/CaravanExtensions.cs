@@ -14,12 +14,6 @@ namespace CaravanSerialization
     public static class PublicCaravanExtensions
     {
         public static T GetValue<T>(this FieldInfo fieldInfo, object obj) where T : class => fieldInfo.GetValue(obj) as T;
-        public static void SetInstanceFieldValue(this object obj, string fieldName, object val)
-        {
-            obj.GetType()
-                .GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)!
-                .SetValue(obj, val);
-        }
         
         public static IEnumerable<TypeInfo> GetTypesThatAreDecoratedBy<TAttribute>(this Assembly a) 
             where TAttribute : Attribute
