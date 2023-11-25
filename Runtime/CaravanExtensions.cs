@@ -168,6 +168,14 @@ namespace CaravanSerialization
         }
         
         public static ICaravan Instance => _instance ??= new Caravan();
+        
+#if UNITY_EDITOR
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void OnDomainReload()
+        {
+            _instance = null;
+        }
+#endif
     }
 }
 
