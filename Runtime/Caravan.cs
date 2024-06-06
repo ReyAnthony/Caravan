@@ -58,6 +58,13 @@ namespace CaravanSerialization
 
         public Caravan()
         {
+            //Hackish !
+            //Force load all scriptableObjects so that we find them at runtime
+            //This might fail if we unload assets at some point I guess
+            //TODO this yield "script behaviour has a different serialization layout" errors, but should work anyway
+            //TODO Caravan could be improved by enforcing using CaravanScriptableObject instead of ScriptableObject
+            Resources.LoadAll<CaravanScriptableObject>(string.Empty);
+            
             _migrationHandlers = new SortedList<int, IMigrationHandler>();
             _substitutesFinder = new SubstitutesFinder();
             _beforeSaveEvents = new Dictionary<Type, List<Action<ScriptableObject>>>();
@@ -388,7 +395,7 @@ namespace CaravanSerialization
         
         private Dictionary<string, List<ScriptableObject>> GetValidScriptablesWithSavedAttributeGroupedByFile(bool requiresExplicitAction)
         {
-            var gameObjects = Resources.FindObjectsOfTypeAll<ScriptableObject>();
+            var gameObjects =  Resources.FindObjectsOfTypeAll<ScriptableObject>();
             var scriptablesGroupedByFile =
                             gameObjects
                                 .Select(so => so)
@@ -408,31 +415,6 @@ namespace CaravanSerialization
                                 .ToDictionary(grp => grp.Key,
                                     grp => grp.Select(tuple => tuple.Obj)
                                                                        .ToList());
-            return scriptablesGroupedByFile;
-        }
-        
-        //TODO Duplicated from GetValidScriptablesWithSavedAttributeGroupedByFile
-        private Dictionary<string, List<ScriptableObject>> GetValidScriptablesWithSavedAttributeGroupedByFileAll()
-        {
-            var gameObjects = Resources.FindObjectsOfTypeAll<ScriptableObject>();
-            var scriptablesGroupedByFile =
-                gameObjects
-                    .Select(so => so)
-#if UNITY_EDITOR
-                    //This will fail anyway in a build, but at least we'll already know while testing in editor.
-                    //Don't instantiate SOs at runtime, it's a wasp nest.  
-                    .Where(AssetDatabase.Contains)
-#endif
-                    .Select(so => (Obj: so,
-                        Saved : so.GetType()
-                                .GetCustomAttributes(false)
-                                .FirstOrDefault(ca => ca is SavedAttribute) 
-                            as SavedAttribute))
-                    .Where(e => e.Saved != null && e.Saved.Validate())
-                    .GroupBy(t => t.Saved.File)
-                    .ToDictionary(grp => grp.Key,
-                        grp => grp.Select(tuple => tuple.Obj)
-                            .ToList());
             return scriptablesGroupedByFile;
         }
     }
