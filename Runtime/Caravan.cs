@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using CaravanSerialization.Attributes;
 using CaravanSerialization.Serialization;
 using CaravanSerialization.Substitutes;
 using CaravanSerialization.Migrations;
 using CaravanSerialization.ObjectModel;
+using JetBrains.Annotations;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
@@ -43,14 +47,26 @@ namespace CaravanSerialization
 
     internal class Caravan : ICaravan
     {
+        static class DoNotOptimize
+        {
+            [MethodImpl(MethodImplOptions.NoInlining), DebuggerHidden]
+            public static T DoNothing<T>(T x) { return x; }
+        };
+        
         private readonly ISubstitutesFinder _substitutesFinder;
         private readonly ISerializer _serializer;
         private readonly SortedList<int, IMigrationHandler> _migrationHandlers;
         private readonly ICaravanObjectTransformer _caravanObjectTransformer;
         private readonly int _saveCountCached = 0;
         
+        //This will force caravan data to not unload from memory !
+        //Caravan being a singleton, it will always hold the data during gameplay.
+        [UsedImplicitly(ImplicitUseKindFlags.Access|ImplicitUseKindFlags.Assign)]
+        private readonly CaravanScriptableObject[] _caravanScriptables;
+        
         private Dictionary<Type, List<Action<ScriptableObject>>> _beforeSaveEvents;
         
+
         public SortedList<int, IMigrationHandler> MigrationHandlers => _migrationHandlers;
         public event Action OnAllSaved;
         public event Action OnAllLoaded;
@@ -60,10 +76,12 @@ namespace CaravanSerialization
         {
             //Hackish !
             //Force load all scriptableObjects so that we find them at runtime
-            //This might fail if we unload assets at some point I guess
             //TODO this yield "script behaviour has a different serialization layout" errors, but should work anyway
             //TODO Caravan could be improved by enforcing using CaravanScriptableObject instead of ScriptableObject
-            Resources.LoadAll<CaravanScriptableObject>(string.Empty);
+            _caravanScriptables = Resources.LoadAll<CaravanScriptableObject>(string.Empty);
+            
+            //This should hopefully avoid optimizing it away in IL2CPP
+            DoNotOptimize.DoNothing(_caravanScriptables);
             
             _migrationHandlers = new SortedList<int, IMigrationHandler>();
             _substitutesFinder = new SubstitutesFinder();
