@@ -17,7 +17,7 @@ Dependencies :
 	- Embeds .dll in editor mode unless ODIN_INSPECTOR is defined in the project's scripting define symbols.
 
 Example usage : 
-```
+```cs
 [Saved("GameManager")]
 public class GameManager : CaravanScriptableObject
 {
