@@ -1,6 +1,8 @@
 # Caravan
 Unity quick and dirty serialization. 
 
+[Real world usage scenarios](usage-scenarios.md)
+
 - Saves Scriptable Objects and allow to restore them back
 - Uses mostly C# attributes + custom classes to inherit from (as Helpers)
 - Supports nested objects (tagged as [Nested])
